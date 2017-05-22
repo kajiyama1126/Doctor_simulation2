@@ -1,0 +1,46 @@
+[agent]
+number = 50
+dimension = 5
+constrain = 3
+
+[simulation]
+iteration = 5000
+normal = 0
+event = 7
+D_NG = 0
+nedic = 0
+
+time_graph = 0
+# 1 true or 0 false
+
+[stop]
+condition = 0.0001
+
+[step]
+normal = 0.0
+event = 0.5
+D_NG = 0.1
+nedic = 0.01
+
+[stepsize]
+stepsize1 = 1.0
+stepsize2 = 0.75
+stepsize3 = 1.0
+stepsize4 = 0.8
+stepsize5 = 1.0
+
+
+[event]
+threshold1 = 0
+threshold2 = 10.0
+threshold3 = 40.0
+threshold4 = 10.0
+threshold5 = 100.0
+threshold6 = 10.0
+threshold7 = 20.0
+
+[not]
+threshold2 = 0.10
+threshold3 = 1.0
+threshold4 = 10.0
+threshold5 = 100.0
