@@ -7,7 +7,7 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
+# import seaborn as sns
 
 from agent_src.agent import Agent_i_constrain
 from agent_src.agent_event import Agent_i_constrain_event_TAC_step_fix
@@ -69,13 +69,14 @@ class Program(object):
         for i in range(7):
             self.threshold.append(float(config['event']['threshold' + str(int(i + 1))]))
 
-        self.th_pa = [0, 1, 2, 3, 4, 5, 6, ]
+        self.th_pa = [0, 2,3,5,6]
         # ==================================================================================================
         self.test = (test_patter, test_event, test_D_NG, test_nedic)
         self.stopcheck = [[0 for i in range(j)] for j in self.test]
 
         self.value_f = [[[[] for i in range(self.n)] for j in range(self.test[k])] for k in range(len(self.test))]
         self.ave_f = [[[] for i in range(j)] for j in self.test]
+        self.consensus_value = [[[] for i in range(j)] for j in self.test]
         self.set_A = []
         self.set_b = []
         print(self.test)
@@ -144,6 +145,14 @@ class Program(object):
                 self.stop_base[i2][i1] = tmp1
                 self.ave_f[i2][i1].append(self.stop[i2][i1] / self.stop_base[i2][i1])
 
+        for i2 in range(len(self.test)):
+            for i1 in range(self.test[i2]):
+                tmp = np.zeros([self.n,self.n])
+                for i in range(self.n):
+                    for j in range(self.n):
+                        tmp[i][j] = np.linalg.norm(self.allagent[i2][i1][i].x_i - self.allagent[i2][i1][j].x_i)
+                self.consensus_value[i2][i1].append(np.max(tmp))
+
     def optimal(self, i0, i1, i2):
         optimal_val = 0
         x_i = self.allagent[i2][i1][i0].x_i
@@ -168,6 +177,17 @@ class Program(object):
                 else:
                     self.ave_f[i2][i1].append(np.NaN)
 
+        for i2 in range(len(self.test)):
+            for i1 in range(self.test[i2]):
+                if self.stopcheck[i2][i1] == 0:
+                    tmp = np.zeros([self.n,self.n])
+                    for i in range(self.n):
+                        for j in range(self.n):
+                            tmp[i][j] = np.linalg.norm(self.allagent[i2][i1][i].x_i - self.allagent[i2][i1][j].x_i)
+                    self.consensus_value[i2][i1].append(np.max(tmp))
+                else:
+                    self.consensus_value[i2][i1].append(np.NaN)
+
     def simulate(self):
         self.presimulate()
         self.centlized_solve()
@@ -183,6 +203,7 @@ class Program(object):
         self.simulation_test()
         self.make_csv()
         self.make_graph()
+        self.make_graph_cons()
 
     def simulation2(self):
         self.presimulate()
@@ -282,8 +303,44 @@ class Program(object):
         plt.yscale("log")
         plt.ylim([10 * (-4), 1])
         plt.legend()
-        sns.set_style("dark")
+        # sns.set_style("dark")
         plt.savefig(self.file + 'f_value' + ".png")
+        plt.show()
+
+    def make_graph_cons(self):
+        color = ['b', 'r', 'y']
+        line = ['-', '--', '-.', ':']
+        step_index = ['$s(k) = 0.5/(k+1)$', '$s(k) = 1.0/(k+1)$', '$s(k) = 2.0/(k+1)$']
+        step_index2 = [r'$s_{1}(k)$', r'$s_{2}(k)$', r'$s_{3}(k)$']
+        # trigger_index = ['$E_i(k) = 0, for all i', '$E_i(k) = 0, for all i', '$E_i(k) = 0, for all i',
+        #                  '$E_i(k) = 10/(k+1), for all i', '$E_i(k) = 10/(k+1), for all i',
+        #                  '$E_i(k) = 10/(k+1), for all i',
+        #                  '$E_i(k) = 10/(k+1)^2, for all i', '$E_i(k) = 10/(k+1)^2, for all i',
+        #                  '$E_i(k) = 10/(k+1)^2, for all i',
+        #                  '$E_i(k) = 10*0.99^k, for all i', '$E_i(k) = 10*0.99^k, for all i',
+        #                  '$E_i(k) = 10*0.99^k, for all i', ]
+        graph_name_index = ['$E(k) = 0$', '$E(k)=1.0/(k+1)$', '$E(k)=10/(k+1)$', '$E(k)=40/(k+1)$',
+                            '$E(k)=10/(k+1)^2$', '$E(k)=10/(k+1)^{0.75}$', '$E(k)=0.2$']
+        trigger_index2 = [['1'], ['2', '3', '4']]
+        for i2 in range(len(self.test)):
+            for i1 in range(self.test[i2]):
+                if i2 == 0:
+                    trigger_name = 'time'
+                    # tmp_line = line[i2]
+                elif i2 == 1:
+                    trigger_name = 'event'
+                    # tmp_line = line[int(self.th_pa[i1] + 1)]
+                # plt.plot(self.ave_f[i2][i1], label=step_index2[1] + ', Trigger Pattern ' + trigger_index[i1])
+                plt.plot(self.consensus_value[i2][i1],linewidth = 1, label=graph_name_index[i1])
+        # plt.legend()
+        plt.xlabel('iteration $k$', fontsize=14)
+        plt.ylabel('$Σ_{i=1}^{50} (f(x_i(k))-f^*)/ Σ_{i=1}^{50}(f(x_i(0))-f^*)$', fontsize=14)
+        plt.tick_params(labelsize=14)
+        plt.yscale("log")
+        # plt.ylim([10 * (-4), 1])
+        plt.legend()
+        # sns.set_style("dark")
+        plt.savefig(self.file + 'consensus' + ".png")
         plt.show()
 
     # def make_graph2(self):
