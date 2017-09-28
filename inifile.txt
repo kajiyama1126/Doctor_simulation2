@@ -4,9 +4,9 @@ dimension = 5
 constrain = 3
 
 [simulation]
-iteration = 2000
+iteration = 1000
 normal = 0
-event = 5
+event = 7
 D_NG = 0
 nedic = 0
 

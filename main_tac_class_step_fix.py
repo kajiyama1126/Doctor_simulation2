@@ -7,7 +7,7 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-# import seaborn as sns
+import seaborn as sns
 
 from agent_src.agent import Agent_i_constrain
 from agent_src.agent_event import Agent_i_constrain_event_TAC_step_fix
@@ -69,7 +69,7 @@ class Program(object):
         for i in range(7):
             self.threshold.append(float(config['event']['threshold' + str(int(i + 1))]))
 
-        self.th_pa = [0, 2,3,5,6]
+        self.th_pa = [0,1,2,3,4,5,6]
         # ==================================================================================================
         self.test = (test_patter, test_event, test_D_NG, test_nedic)
         self.stopcheck = [[0 for i in range(j)] for j in self.test]
@@ -151,7 +151,8 @@ class Program(object):
                 for i in range(self.n):
                     for j in range(self.n):
                         tmp[i][j] = np.linalg.norm(self.allagent[i2][i1][i].x_i - self.allagent[i2][i1][j].x_i)
-                self.consensus_value[i2][i1].append(np.max(tmp))
+                self.consensus_base = np.max(tmp)
+                self.consensus_value[i2][i1].append(np.max(tmp)/self.consensus_base)
 
     def optimal(self, i0, i1, i2):
         optimal_val = 0
@@ -184,7 +185,7 @@ class Program(object):
                     for i in range(self.n):
                         for j in range(self.n):
                             tmp[i][j] = np.linalg.norm(self.allagent[i2][i1][i].x_i - self.allagent[i2][i1][j].x_i)
-                    self.consensus_value[i2][i1].append(np.max(tmp))
+                    self.consensus_value[i2][i1].append(np.max(tmp)/self.consensus_base)
                 else:
                     self.consensus_value[i2][i1].append(np.NaN)
 
@@ -295,11 +296,12 @@ class Program(object):
                     trigger_name = 'event'
                     # tmp_line = line[int(self.th_pa[i1] + 1)]
                 # plt.plot(self.ave_f[i2][i1], label=step_index2[1] + ', Trigger Pattern ' + trigger_index[i1])
-                plt.plot(self.ave_f[i2][i1],linewidth = 1, label=graph_name_index[i1])
+                if i1 == 0 or i1 == 2 or i1 == 3 or i1 == 5 or i1 == 6:
+                    plt.plot(self.ave_f[i2][i1],linewidth = 1, label=graph_name_index[i1])
         # plt.legend()
-        plt.xlabel('iteration $k$', fontsize=14)
-        plt.ylabel('$Σ_{i=1}^{50} (f(x_i(k))-f^*)/ Σ_{i=1}^{50}(f(x_i(0))-f^*)$', fontsize=14)
-        plt.tick_params(labelsize=14)
+        plt.xlabel('iteration $k$', fontsize=12)
+        plt.ylabel('$Σ_{i=1}^{50} (f(x_i(k))-f^*)/ Σ_{i=1}^{50}(f(x_i(0))-f^*)$', fontsize=12)
+        plt.tick_params(labelsize=12)
         plt.yscale("log")
         plt.ylim([10 * (-4), 1])
         plt.legend()
@@ -331,11 +333,12 @@ class Program(object):
                     trigger_name = 'event'
                     # tmp_line = line[int(self.th_pa[i1] + 1)]
                 # plt.plot(self.ave_f[i2][i1], label=step_index2[1] + ', Trigger Pattern ' + trigger_index[i1])
-                plt.plot(self.consensus_value[i2][i1],linewidth = 1, label=graph_name_index[i1])
+                if i1 == 0 or i1 == 2 or i1 == 3 or i1 == 5 or i1 == 6:
+                    plt.plot(self.consensus_value[i2][i1],linewidth = 1, label=graph_name_index[i1])
         # plt.legend()
-        plt.xlabel('iteration $k$', fontsize=14)
-        plt.ylabel('$Σ_{i=1}^{50} (f(x_i(k))-f^*)/ Σ_{i=1}^{50}(f(x_i(0))-f^*)$', fontsize=14)
-        plt.tick_params(labelsize=14)
+        plt.xlabel('iteration $k$', fontsize=12)
+        plt.ylabel('$\max_{i,j \in V} ||x_i(k)-x_j(k)|| / \max_{i,j \in V} ||x_i(0)-x_j(0)||}$', fontsize=12)
+        plt.tick_params(labelsize=12)
         plt.yscale("log")
         # plt.ylim([10 * (-4), 1])
         plt.legend()
