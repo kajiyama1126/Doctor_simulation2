@@ -7,17 +7,16 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
-
-from agent_src.agent import Agent_i_constrain
-from agent_src.agent_event import Agent_i_constrain_event_TAC_step_fix
-from other_src.make_communication import Communication
-from other_src.solver import Solver
+# import seaborn as sns
+from event_trigger_subgrad.TAC0517.agent_src.agent import Agent_i_constrain
+from event_trigger_subgrad.TAC0517.agent_src.agent_event import Agent_i_constrain_event_TAC_step_fix
+from event_trigger_subgrad.TAC0517.other_src.make_communication import Communication
+from event_trigger_subgrad.TAC0517.other_src.solver import Solver
 
 
 class Program(object):
     def __init__(self):
-        os.chdir('/Users/kajiyama/PycharmProjects/TAC0517')
+        os.chdir('/Users/yuich/Dropbox/研究室/高井研究室/D1/博士論文/D論シミュレーション/event_trigger_subgrad/TAC0517')
         config = configparser.ConfigParser()
         config.read('inifile.txt')
         today = datetime.datetime.now()
@@ -48,6 +47,13 @@ class Program(object):
         Graph.weight_martix()
 
         self.weight_matrix = Graph.P
+        ###理論値用##
+        # self.beta = Graph.send_beta()
+        self.eta = Graph.send_eta()
+        self.gamma = 1-self.eta/(self.n ** 2)
+        a = self.gamma**(1/2) /(1-self.gamma**(1/2))
+        print(self.eta,self.gamma,a)
+
         # nx.draw(Graph.G)
         self.time_graph = int(config['simulation']['time_graph'])
 
@@ -69,7 +75,7 @@ class Program(object):
         for i in range(7):
             self.threshold.append(float(config['event']['threshold' + str(int(i + 1))]))
 
-        self.th_pa = [0,1,2,3,4,5,6]
+        self.th_pa = [0, 1, 2, 3, 4, 5, 6]
         # ==================================================================================================
         self.test = (test_patter, test_event, test_D_NG, test_nedic)
         self.stopcheck = [[0 for i in range(j)] for j in self.test]
@@ -147,12 +153,12 @@ class Program(object):
 
         for i2 in range(len(self.test)):
             for i1 in range(self.test[i2]):
-                tmp = np.zeros([self.n,self.n])
+                tmp = np.zeros([self.n, self.n])
                 for i in range(self.n):
                     for j in range(self.n):
                         tmp[i][j] = np.linalg.norm(self.allagent[i2][i1][i].x_i - self.allagent[i2][i1][j].x_i)
                 self.consensus_base = np.max(tmp)
-                self.consensus_value[i2][i1].append(np.max(tmp)/self.consensus_base)
+                self.consensus_value[i2][i1].append(np.max(tmp) / self.consensus_base)
 
     def optimal(self, i0, i1, i2):
         optimal_val = 0
@@ -181,11 +187,11 @@ class Program(object):
         for i2 in range(len(self.test)):
             for i1 in range(self.test[i2]):
                 if self.stopcheck[i2][i1] == 0:
-                    tmp = np.zeros([self.n,self.n])
+                    tmp = np.zeros([self.n, self.n])
                     for i in range(self.n):
                         for j in range(self.n):
                             tmp[i][j] = np.linalg.norm(self.allagent[i2][i1][i].x_i - self.allagent[i2][i1][j].x_i)
-                    self.consensus_value[i2][i1].append(np.max(tmp)/self.consensus_base)
+                    self.consensus_value[i2][i1].append(np.max(tmp) / self.consensus_base)
                 else:
                     self.consensus_value[i2][i1].append(np.NaN)
 
@@ -269,7 +275,7 @@ class Program(object):
                             trigger_sum += self.allagent[i2][i1][i].trigger_count / self.allagent[i2][i1][
                                 i].neighbor_count / self.n
                     trigger_sum = np.sum(trigger_sum)
-                    self.calc_count[i2][i1] = k+1
+                    self.calc_count[i2][i1] = k + 1
                     self.communication_count[i2][i1] = trigger_sum
 
     def make_graph(self):
@@ -297,14 +303,14 @@ class Program(object):
                     # tmp_line = line[int(self.th_pa[i1] + 1)]
                 # plt.plot(self.ave_f[i2][i1], label=step_index2[1] + ', Trigger Pattern ' + trigger_index[i1])
                 if i1 == 0 or i1 == 2 or i1 == 3 or i1 == 5 or i1 == 6:
-                    plt.plot(self.ave_f[i2][i1],linewidth = 1, label=graph_name_index[i1])
+                    plt.plot(self.ave_f[i2][i1], linewidth=1, label=graph_name_index[i1])
         # plt.legend()
-        plt.xlabel('iteration $k$', fontsize=12)
-        plt.ylabel('$Σ_{i=1}^{50} (f(x_i(k))-f^*)/ Σ_{i=1}^{50}(f(x_i(0))-f^*)$', fontsize=12)
-        plt.tick_params(labelsize=12)
+        plt.xlabel('iteration $k$', fontsize=15)
+        plt.ylabel('Relative Cost', fontsize=15)
+        plt.tick_params(labelsize=15)
         plt.yscale("log")
         plt.ylim([10 * (-4), 1])
-        plt.legend()
+        plt.legend(fontsize=14)
         # sns.set_style("dark")
         plt.savefig(self.file + 'f_value' + ".png")
         plt.show()
@@ -334,14 +340,15 @@ class Program(object):
                     # tmp_line = line[int(self.th_pa[i1] + 1)]
                 # plt.plot(self.ave_f[i2][i1], label=step_index2[1] + ', Trigger Pattern ' + trigger_index[i1])
                 if i1 == 0 or i1 == 2 or i1 == 3 or i1 == 5 or i1 == 6:
-                    plt.plot(self.consensus_value[i2][i1],linewidth = 1, label=graph_name_index[i1])
+                    plt.plot(self.consensus_value[i2][i1], linewidth=1, label=graph_name_index[i1])
         # plt.legend()
-        plt.xlabel('iteration $k$', fontsize=12)
-        plt.ylabel('$\max_{i,j \in V} ||x_i(k)-x_j(k)|| / \max_{i,j \in V} ||x_i(0)-x_j(0)||}$', fontsize=12)
-        plt.tick_params(labelsize=12)
+        plt.xlabel('iteration $k$', fontsize=15)
+        # plt.ylabel('$\max_{i,j \in V} ||x_i(k)-x_j(k)|| / \max_{i,j \in V} ||x_i(0)-x_j(0)||}$', fontsize=12)
+        plt.ylabel('Relative Consensus Error', fontsize=15)
+        plt.tick_params(labelsize=15)
         plt.yscale("log")
         # plt.ylim([10 * (-4), 1])
-        plt.legend()
+        plt.legend(fontsize=14)
         # sns.set_style("dark")
         plt.savefig(self.file + 'consensus' + ".png")
         plt.show()
@@ -389,6 +396,16 @@ class Program(object):
         # print(data)
         data.to_csv(self.file + 'f_value' + '.csv')
 
-
     def presend(self):
         return [[0 for i in range(j)] for j in self.test]
+
+    def riron_value(self):
+        n = self.n
+        C_B = 3
+        #
+        #
+        # self.C_2 = n * C * C_B / 2 + n * C / (2 * (1 - beta)) + 5 * C_d * C_d * (
+        #     n * gamma * C / (gamma - beta) + 2) + 15 * E * E / 2 * (n * gamma * C / (gamma - beta) + 2) + 1
+        # self.C_1 = 2 * n * C_B * C_B + 2 * n * (2 * C_d + E) * (
+        #     4 * c * C_B / (a ** b) + n * C * C_B / (2 * (1 - beta))) + (2 * n * (2 * C_d + E) * self.C_2 + 3 * n * (
+        # C_d * C_d + 2 * E * E) / 2) * ((c / (a ** b)) ** 2) * (1 + a / (2 * b - 1))

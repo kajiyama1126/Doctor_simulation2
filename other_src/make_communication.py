@@ -11,6 +11,7 @@ class Communication:  # (頂点数，辺数，辺確率)
         self.k = k
         self.p = p
         self.count = 0
+        np.random.seed(0)
 
     def make_connected_WS_graph(self):
         self.G = nx.connected_watts_strogatz_graph(self.n, self.k, self.p)
@@ -82,3 +83,13 @@ class Communication:  # (頂点数，辺数，辺確率)
             for j in range(self.n):
                 sum += self.P[i][j]
             self.P[i][i] = 1.0 - sum
+
+    def send_beta(self):
+        w = np.linalg.eigvals(self.P)
+        w = np.sort(w)
+        # print(w)
+        # print(w[-2])
+        return w[-2]
+
+    def send_eta(self):
+        return np.min(self.P[np.nonzero(self.P)])
